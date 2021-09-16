@@ -1,2 +1,2 @@
 this is a new branch of learngit.
-this is the second line & simple.
+this is the second line and simple
