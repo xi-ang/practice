@@ -1,0 +1,19 @@
+
+[
+  {
+    "name": "待办",
+    "key": "TODO"
+  },
+  {
+    "name": "进行中",
+    "key": "IN_PROGRESS"
+  },
+  {
+    "name": "审核中",
+    "key": "IN_REVIEW"
+  },
+  {
+    "name": "已完成",
+    "key": "DONE"
+  }
+]

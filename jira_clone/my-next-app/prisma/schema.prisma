@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//在 Prisma 数据模型中，? 表示字段是 可选的.
+
+//cuid()（一个生成唯一标识符的函数）
+model User {
+  id            String    @id @default(cuid())
+  clerkUserId   String    @unique
+  email         String    @unique
+  name          String?
+  imageUrl      String?
+  createdIssues Issue[]   @relation("Reporter")
+  assignedIssues Issue[]  @relation("Assignee")  // 给这个关系指定了一个名称，以便在查询中引用它。
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Project {
+  id             String    @id @default(cuid())
+  name           String      
+  key            String    
+  description    String?
+  organizationId String    //This will store the Clerk organization ID
+  sprints        Sprint[]  
+  issues         Issue[]   
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([organizationId, key])
+}
+
+model Sprint {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  startDate DateTime
+  endDate   DateTime
+  status    SprintStatus @default(PLANNED)
+
+  //fields指定 Issue 表中的 projectId 字段作为外键，references表示外键 projectId 对应 Project 模型中的 id 字段。
+  
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)  //级联删除
+  projectId String
+  issues    Issue[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+model Issue {
+  id          String     @id @default(cuid())     // 唯一标识符，使用 cuid 自动生成
+  title       String                                    // 问题的标题
+  description String?                                   // 问题的描述，可以为空
+  status      IssueStatus                               // 问题的状态，枚举类型
+  order       Int                                       // 问题的顺序，可能是问题在某个状态中的排列顺序
+  priority    IssuePriority                             // 问题的优先级，枚举类型
+  assignee    User?                                     // 问题的负责人，关联 User 表
+  assigneeId  String?                                   // 负责人用户的 ID
+  reporter    User                                     // 问题的报告人，关联 User 表
+  reporterId  String                                   // 报告人的用户 ID
+  project     Project                                  // 关联的项目，关联 Project 表
+  projectId   String                                   // 项目 ID
+  sprint      Sprint?                                  // 关联的冲刺，关联 Sprint 表
+  sprintId    String?                                  // 冲刺 ID
+  createdAt   DateTime  @default(now())                // 创建时间，默认为当前时间
+  updatedAt   DateTime  @updatedAt                    // 更新时间，自动更新时间
+
+  @@index([status, order])                            // 索引，基于 status 和 order 列创建索引，以提高查询性能
+}
+
+
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+enum IssueStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+
